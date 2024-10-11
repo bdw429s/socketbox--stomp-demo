@@ -41,12 +41,34 @@ label {
     white-space: nowrap !important;
     border: 0 !important;
 }
-.lucky-numbers {
+
+#lucky-numbers-wrapper {
+    float: left;
+    width: 50%;
+}
+
+.scroller {
     border: 1px solid var(--pico-form-element-border-color);
     border-radius: var(--pico-border-radius);
     height: 15em;
     margin-bottom: 0;
     padding: var(--pico-spacing);
     overflow-y: scroll;
+    width: 75%;
+}
+
+#food-wrapper {
+    float: right;
     width: 50%;
+}
+
+.scrolling-container {
+    display: flex;
+    justify-content: space-between; /* Adjust spacing between divs as needed */
+    gap: 10px; /* Optional: Add gap between divs */
+}
+
+.center-container {
+    display: flex;
+    justify-content: center; /* Center horizontally */
 }

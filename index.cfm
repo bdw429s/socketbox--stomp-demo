@@ -28,20 +28,75 @@
 		<main class="container">
 		<h1>STOMP SocketBox Demo</h1>
 		<p>
-			This is a simple chat application that uses WebSockets to communicate with the server. It is built using CFML (running on BoxLang) and our new
+			This is a demo that uses WebSockets to communicate with the server. It is built using CFML (running on BoxLang) and our new
 			<a href="https://forgebox.io/view/socketbox">SocketBox library</a>.  SocketBox is a new feature built into CommandBox and the BoxLang MiniServer
 			to be able to easily create WebSocket servers in CFML that work for Adobe ColdFusion, Lucee Server, or BoxLang!
 		</p>
+		<p>
+			This demo uses the STOMP broker functionality, which sites on top of the simple websocket functionality and adds topic and routing semanatics.  You can 
+			use any Stomp.js client library and create a STOMP connection, over which you can subscribe to topics, and send messages to different desitinations.  We are 
+			using direct routing, topic routing, fanout routing, and distribution routing as well as server-side listeners.  Data is sent at random from a thread on the server
+			to mimic real-time information.
+		</p>
 
-		<label for="serverTimeSubscriptionBox">Current Server Time <input type="checkbox" id="serverTimeSubscriptionBox" name="serverTimeSubscriptionBox" checked="checked" onclick="toggleTime(this.checked);"></label>
-		<span id="server-time"></span><br>
+		<div id="lucky-numbers-wrapper" >
+			<label for="serverTimeSubscriptionBox">Current Server Time <input type="checkbox" id="serverTimeSubscriptionBox" name="serverTimeSubscriptionBox" checked="checked" onclick="toggleTime(this.checked);"></label>
+			<span id="server-time"></span>
+			<br>
+			<br>
+			<br>
+			<label for="luckyNumberSubscriptionBox">Lucky Numbers <input type="checkbox" id="luckyNumberSubscriptionBox" name="luckyNumberSubscriptionBox" checked="checked" onclick="toggleNums(this.checked);"></label>
+			<div id="lucky-numbers" class="scroller"></div>
+		</div>
+		<div id="food-wrapper" >
+			<label for="foodSubscriptionBoxAll">All Food <input type="radio" id="foodSubscriptionBoxAll" name="foodSubscriptionBox" checked="checked" onclick="toggleFood('All');"></label>
+			<label for="foodSubscriptionBoxFruit">Fruit Only <input type="radio" id="foodSubscriptionBoxFruit" name="foodSubscriptionBox" onclick="toggleFood('Fruit');"></label>
+			<label for="foodSubscriptionBoxSnacks">Snacks Only <input type="radio" id="foodSubscriptionBoxSnacks" name="foodSubscriptionBox" onclick="toggleFood('Snacks');"></label>
+			<label for="foodSubscriptionBoxNone">None <input type="radio" id="foodSubscriptionBoxNone" name="foodSubscriptionBox" onclick="toggleFood('None');"></label>
+			<div id="food" class="scroller"></div>
+		</div>
+		<div style="clear: both;">
+			<br>
+			<br>
+			<hr>
+			<br>    
+			<div class="center-container">
+				<button onClick="sendPing();">Ping</button>
+			</div>
+			<div class="center-container">
+				<div id="ping-response"></div>
+			</div>
+		</div>
+		<hr>
+		<div class="center-container">
+			<h2>Family Messenger</h2>
+		</div>
 		<br>
-		<label for="serverTimeSubscriptionBox">Lucky Numbers <input type="checkbox" id="luckyNumberSubscriptionBox" name="luckyNumberSubscriptionBox" checked="checked" onclick="toggleNums(this.checked);"></label>
-		<div id="lucky-numbers" class="lucky-numbers"></div>
-		
-		<br>
-		<br>
-		<button onClick="client.publish({ destination: 'lucky-numbers', body: '42' });">send</button>
+		<div class="center-container">
+			<button onclick="sendFamilyMessage();">Message entire family</button>&nbsp;&nbsp;&nbsp;
+			<button onclick="sendParentMessage();">Message parents</button>&nbsp;&nbsp;&nbsp;
+			<button onclick="sendKidMessage();">Message kids</button>&nbsp;&nbsp;&nbsp;
+			<button onclick="assignChore();">Assign a chore</button>
+		</div>
+		<br> 
+		<div class="scrolling-container">
+			<div style="width: 75%; text-align:center;">
+				<h3>Mom</h3>
+				<div style="width: 100%; text-align:left;" class="scroller" id="mom-scroller"></div>
+			</div>
+			<div style="width: 75%; text-align:center;">
+				<h3>Dad</h3>
+				<div style="width: 100%; text-align:left;" class="scroller" id="dad-scroller"></div>
+			</div>
+			<div style="width: 75%; text-align:center;">
+				<h3>Susie</h3>
+				<div style="width: 100%; text-align:left;" class="scroller" id="susie-scroller"></div>
+			</div>
+			<div style="width: 75%; text-align:center;">
+				<h3>Timmy</h3>
+				<div style="width: 100%; text-align:left;" class="scroller" id="timmy-scroller"></div>
+			</div>
+		</div>
 		</main>
 		<cfscript>		
 			request.connectionAddress = '://#cgi.server_name#'
@@ -69,12 +124,37 @@
 			login: 'myuser',
 			passcode: 'mypass'
 			},
-			onConnect: () => {
-				toggleTime(true);
-				toggleNums(true);
+			onConnect: (frame) => {
+				window.sessionID = frame.headers.session;
+				toggleTime( document.getElementById('serverTimeSubscriptionBox').checked );
+				toggleNums( document.getElementById('luckyNumberSubscriptionBox').checked );
+				var foodType = 'All';
+				if( document.getElementById('foodSubscriptionBoxFruit').checked ) {
+					foodType = 'Fruit';
+				} else if( document.getElementById('foodSubscriptionBoxSnacks').checked ) {
+					foodType = 'Snacks';
+				} else if( document.getElementById('foodSubscriptionBoxNone').checked ) {
+					foodType = 'None';
+				}
+				toggleFood( foodType );
+				pingListen();
+				familyListen();
 			},
 			onStompError: error => {
 				console.log("STOMP error: " + error.headers.message);
+			},
+			onWebSocketClose: () => {
+				console.log("WebSocket connection closed");
+				window.serverTimeSubscription = null;
+				window.luckyNumberSubscription = null;
+				window.foodAllSubscription = null;
+				window.foodFruitSubscription = null;
+				window.foodSnacksSubscription = null;
+				window.pongListener = null;
+				window.momListener = null;
+				window.dadListener = null;
+				window.susieListener = null;
+				window.timmyListener = null;
 			},
 			debug: function (str) {
 				console.log(str);
@@ -87,27 +167,164 @@
 		
 		<script>
 			function toggleTime(enable) {
-				if (enable && !window.serverTimeSubscription) {
-					window.serverTimeSubscription = client.subscribe('server-time', function( message ) {
-						document.getElementById('server-time').innerText = message.body;
-					});
-				} else {
+				if (enable) {
+					if( !window.serverTimeSubscription ) {
+						window.serverTimeSubscription = client.subscribe('server-time', function( message ) {
+							document.getElementById('server-time').innerText = message.body;
+						});
+					}
+				} else if( window.serverTimeSubscription ) {
 					window.serverTimeSubscription.unsubscribe();
 					window.serverTimeSubscription = null;
 				}
 			}
 
 			function toggleNums(enable) {
-				if (enable && !window.luckyNumberSubscription) {
-					window.luckyNumberSubscription = client.subscribe('lucky-numbers', message => {
-						const luckyNumbers = document.getElementById('lucky-numbers');
-						luckyNumbers.innerHTML += message.body + '<br>';
-						luckyNumbers.scrollTop = luckyNumbers.scrollHeight;
-					});
-				} else {
+				if (enable) {
+					if(!window.luckyNumberSubscription) {
+						window.luckyNumberSubscription = client.subscribe('lucky-numbers', message => {
+							const luckyNumbers = document.getElementById('lucky-numbers');
+							luckyNumbers.innerHTML += message.body + '<br>';
+							luckyNumbers.scrollTop = luckyNumbers.scrollHeight;
+						});
+					}
+				} else if( window.luckyNumberSubscription ) {
 					window.luckyNumberSubscription.unsubscribe();
 					window.luckyNumberSubscription = null;
 				}
+			}
+
+			function toggleFood(type) {
+				if (type != 'All' && window.foodAllSubscription) {
+					window.foodAllSubscription.unsubscribe();
+					window.foodAllSubscription = null;
+				}
+				if (type != 'Fruit' && window.foodFruitSubscription) {
+					window.foodFruitSubscription.unsubscribe();
+					window.foodFruitSubscription = null;
+				}
+				if (type != 'Snacks' && window.foodSnacksSubscription) {
+					window.foodSnacksSubscription.unsubscribe();
+					window.foodSnacksSubscription = null;
+				}
+				if (type == 'All' && !window.foodAllSubscription) {
+					window.foodAllSubscription = client.subscribe('all-food', updateFood );
+				} else if (type == 'Fruit' && !window.foodFruitSubscription) {
+					window.foodFruitSubscription = client.subscribe('only-fruit', updateFood);
+				} else if (type == 'Snacks' && !window.foodSnacksSubscription) {
+					window.foodSnacksSubscription = client.subscribe('only-snacks', updateFood );
+				}
+			}
+
+			function updateFood(message) {
+				const food = document.getElementById('food');
+				var foodData = JSON.parse(message.body);
+				food.innerHTML += '<span style="color:' + ( foodData.type == 'fruit' ? 'blue' : 'red' ) + '">' + foodData.food + '</span><br>';
+				food.scrollTop = food.scrollHeight;
+			}
+
+			function pingListen() {
+				if( !window.pongListener ) {
+					window.pongListener = client.subscribe('pong.' + window.sessionID, message => {
+						console.log("Received pong sdfsdf: " + message.body);
+						document.getElementById('ping-response').innerHTML = '<strong>' + message.body + '</strong>';
+					});
+				}
+			}
+
+			function sendPing() {
+				client.publish({
+					destination: 'ping',
+					body: 'Ping!',
+					headers: {
+						"reply-to" : 'pong.' + window.sessionID
+					}
+				});
+			}
+
+			function familyListen() {
+				if( !window.momListener ) {
+					window.momListener = client.subscribe('mom', message => {
+						if( message.headers['correlation-id'] != window.sessionID ) {
+							return;
+						}
+						const scroller = document.getElementById('mom-scroller');
+						scroller.innerHTML += message.body + '<br>';
+						scroller.scrollTop = scroller.scrollHeight;
+					});
+				}
+				if( !window.dadListener ) {
+					window.dadListener = client.subscribe('dad', message => {
+						if( message.headers['correlation-id'] != window.sessionID ) {
+							return;
+						}
+						const scroller = document.getElementById('dad-scroller');
+						scroller.innerHTML += message.body + '<br>';
+						scroller.scrollTop = scroller.scrollHeight;
+					});
+				}
+				if( !window.susieListener ) {
+					window.susieListener = client.subscribe('susie', message => {
+						if( message.headers['correlation-id'] != window.sessionID ) {
+							return;
+						}
+						const scroller = document.getElementById('susie-scroller');
+						scroller.innerHTML += message.body + '<br>';
+						scroller.scrollTop = scroller.scrollHeight;
+					});
+				}
+				if( !window.timmyListener ) {
+					window.timmyListener = client.subscribe('timmy', message => {
+						if( message.headers['correlation-id'] != window.sessionID ) {
+							return;
+						}
+						const scroller = document.getElementById('timmy-scroller');
+						scroller.innerHTML += message.body + '<br>';
+						scroller.scrollTop = scroller.scrollHeight;
+					});
+				}
+			}
+
+			
+
+			function sendFamilyMessage() {
+				client.publish({
+					destination: 'family-broadcast',
+					body: '',
+					headers: {
+						"correlation-id" : window.sessionID
+					}
+				});
+			}
+
+			function sendParentMessage() {
+				client.publish({
+					destination: 'parent-broadcast',
+					body: '',
+					headers: {
+						"correlation-id" : window.sessionID
+					}
+				});
+			}
+
+			function sendKidMessage() {
+				client.publish({
+					destination: 'kid-broadcast',
+					body: '',
+					headers: {
+						"correlation-id" : window.sessionID
+					}
+				});
+			}
+
+			function assignChore() {
+				client.publish({
+					destination: 'family-chores',
+					body: '',
+					headers: {
+						"correlation-id" : window.sessionID
+					}
+				});
 			}
 		</script>
 	</body>
