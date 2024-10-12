@@ -48,8 +48,7 @@ component extends="modules.socketbox.models.WebSocketSTOMP" {
 		"Don't tell mom we broke her favoriate vase!",
 		"Let's get up early Saturday to watch cartoons",
 		"Who wants to go to the skate park?",
-		"Don't go in your siblings' room without permission",
-		
+		"Don't go in your siblings' room without permission"		
 	];
 
 	familyChores = [
@@ -69,7 +68,7 @@ component extends="modules.socketbox.models.WebSocketSTOMP" {
 	function configure() {
 		return {
 			"debugMode" : false,
-			"heartBeatMS" : 0,
+			"heartBeatMS" : 10000,
 			"exchanges" : {
 				 "topic" : {
 				 	"bindings" : {

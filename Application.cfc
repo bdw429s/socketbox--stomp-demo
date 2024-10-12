@@ -1,7 +1,5 @@
 component {
 
-	//println( "Application.cfc loaded #cgi.SCRIPT_NAME#?#cgi.QUERY_STRING# in thread: #createOBject('java','java.lang.Thread').currentThread().getName()#" );
-
 	fruit = [
 		"apple",
 		"banana",
@@ -57,9 +55,11 @@ component {
 
 	//systemOutput("Application Received #cgi.SCRIPT_NAME#?#cgi.QUERY_STRING#", true);
 	function onApplicationStart() {
+		variables.ws = new WebSocket();
 		cfthread( name="produceData", action="run" ) {
-			thread.ws = new WebSocket();
+			setting requestTimeout=99999999999;
 			sleep( 1000 );
+			thread.ws = variables.ws;
 			while( true ) {
 				try {
 					sleep( 250 );
@@ -72,7 +72,8 @@ component {
 					sleep( 250 );
 					thread.ws.send( "topic/food.snacks", { 'food' : chooseRandom( snacks ), 'type' : 'snack' } )
 				} catch( any e ) {
-					e.printStackTrace();
+					writedump( var=e.message, output="console" );
+					writedump( var=e, output="console" );
 				}
 			}
 		}

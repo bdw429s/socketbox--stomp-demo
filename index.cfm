@@ -100,9 +100,10 @@
 		</main>
 		<cfscript>		
 			request.connectionAddress = '://#cgi.server_name#'
+			headers = getHTTPRequestData().headers;
 			if( cgi.https == true || cgi.https == 'on' ) {
 				request.connectionAddress = 'wss' & request.connectionAddress;
-			} else if( (getHTTPRequestData().headers['x-forwarded-proto'] ?: '') == 'https' ) {
+			} else if( (headers['x-forwarded-proto'] ?: '') == 'https' ) {
 				request.connectionAddress = 'wss' & request.connectionAddress;
 			} else {
 				request.connectionAddress = 'ws' & request.connectionAddress & ":" & cgi.SERVER_PORT;
