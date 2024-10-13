@@ -11,7 +11,7 @@ COPY ./ /app
 RUN box install
 
 # Stage 2: Use ortussolutions/boxlang:miniserver as the final image
-FROM ortussolutions/boxlang:miniserver
+FROM ortussolutions/boxlang@sha256:miniserver-snapshot
 
 # Set environment variable and expose port
 ENV BOXLANG_PORT=10000
