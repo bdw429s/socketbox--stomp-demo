@@ -208,6 +208,13 @@
 						window.luckyNumberSubscription = client.subscribe('lucky-numbers', message => {
 							const luckyNumbers = document.getElementById('lucky-numbers');
 							luckyNumbers.innerHTML += message.body + '<br>';
+							const lines = luckyNumbers.innerHTML.split('<br>');
+							
+							// Trim to the last 100 lines
+							if (lines.length > 100) {
+								luckyNumbers.innerHTML = lines.slice(-100).join('<br>');
+							}
+							
 							luckyNumbers.scrollTop = luckyNumbers.scrollHeight;
 						});
 					}
@@ -243,6 +250,14 @@
 				const food = document.getElementById('food');
 				var foodData = JSON.parse(message.body);
 				food.innerHTML += '<span style="color:' + ( foodData.type == 'fruit' ? 'blue' : 'red' ) + '">' + foodData.food + '</span><br>';
+
+				const lines = food.innerHTML.split('<br>');
+				
+				// Trim to the last 100 lines
+				if (lines.length > 100) {
+					food.innerHTML = lines.slice(-100).join('<br>');
+				}
+
 				food.scrollTop = food.scrollHeight;
 			}
 
