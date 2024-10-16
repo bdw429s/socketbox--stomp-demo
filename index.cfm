@@ -33,13 +33,12 @@
 			to be able to easily create WebSocket servers in CFML that work for Adobe ColdFusion, Lucee Server, or BoxLang!
 		</p>
 		<p>
-			This demo uses the STOMP broker functionality, which sites on top of the simple websocket functionality and adds topic and routing semanatics.  You can 
+			This demo uses the STOMP broker functionality, which sits on top of the simple websocket functionality and adds topic and routing semanatics.  You can 
 			use any Stomp.js client library and create a STOMP connection, over which you can subscribe to topics, and send messages to different desitinations.  We are 
-			using direct routing, topic routing, fanout routing, and distribution routing as well as server-side listeners.  Data is sent at random from a thread on the server
-			to mimic real-time information.
+			using direct routing, topic routing, fanout routing, and distribution routing as well as server-side listeners.  
 		</p>
 		<p>
-			All streaming data below is generated randomly by a daemon thread on the server which broadcasts out messages regardless of whether or not there is a browser with a WebSocket 
+			All streaming data below is generated randomly by a daemon thread on the server to mimic real-time information which broadcasts out messages regardless of whether or not there is a browser with a WebSocket 
 			connected. If you open two tabs, you'll see they are reveiving the same data.  Open your browser's console to see debug info from the Stomp.js library.  As you subscribe and 
 			unsubscribe from different topics, you'll see the incoming messages change based on your subscriptions, which are authorized and tracked on the server.
 		</p>
