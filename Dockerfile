@@ -24,7 +24,7 @@ RUN rm -r /app/*
 # Copy the application code from the builder stage
 COPY --from=builder /app /app
 
-RUN curl -o /usr/local/lib/boxlang-miniserver-1.0.0-snapshot-all.jar https://s3.amazonaws.com/downloads.ortussolutions.com/ortussolutions/boxlang-runtimes/boxlang-miniserver/1.0.0-snapshot/boxlang-miniserver-1.0.0-snapshot-all.jar
+RUN curl -o /usr/local/lib/boxlang-miniserver-1.0.0-snapshot-all.jar https://s3.amazonaws.com/downloads.ortussolutions.com/ortussolutions/boxlang-runtimes/boxlang-miniserver/1.0.0-snapshot/boxlang-miniserver-1.0.0-snapshot-all.jar?
 
 # Compile app
 RUN  java -cp /usr/local/lib/boxlang-miniserver-1.0.0-snapshot-all.jar ortus.boxlang.compiler.BXCompiler --source /app --target /app --basePath /app
