@@ -38,17 +38,26 @@
 			using direct routing, topic routing, fanout routing, and distribution routing as well as server-side listeners.  Data is sent at random from a thread on the server
 			to mimic real-time information.
 		</p>
+		<p>
+			All streaming data below is generated randomly by a daemon thread on the server which broadcasts out messages regardless of whether or not there is a browser with a WebSocket 
+			connected. If you open two tabs, you'll see they are reveiving the same data.  Open your browser's console to see debug info from the Stomp.js library.  As you subscribe and 
+			unsubscribe from different topics, you'll see the incoming messages change based on your subscriptions, which are authorized and tracked on the server.
+		</p>
+		<hr>
 
 		<div id="lucky-numbers-wrapper" >
+			<em>When subscribed to this topic, you receive the current server time every second.</em><br><br>
 			<label for="serverTimeSubscriptionBox">Current Server Time <input type="checkbox" id="serverTimeSubscriptionBox" name="serverTimeSubscriptionBox" checked="checked" onclick="toggleTime(this.checked);"></label>
 			<span id="server-time"></span>
 			<br>
 			<br>
 			<br>
+			<em>Subscribe to this topic to receive a stream of lucky numbers.</em><br><br>
 			<label for="luckyNumberSubscriptionBox">Lucky Numbers <input type="checkbox" id="luckyNumberSubscriptionBox" name="luckyNumberSubscriptionBox" checked="checked" onclick="toggleNums(this.checked);"></label>
 			<div id="lucky-numbers" class="scroller"></div>
 		</div>
 		<div id="food-wrapper" >
+			<em>Here you have the choice of 3 topics containing different types of food.  These use a topic exchange with wildcard for matching.</em><br><br>
 			<label for="foodSubscriptionBoxAll">All Food <input type="radio" id="foodSubscriptionBoxAll" name="foodSubscriptionBox" checked="checked" onclick="toggleFood('All');"></label>
 			<label for="foodSubscriptionBoxFruit">Fruit Only <input type="radio" id="foodSubscriptionBoxFruit" name="foodSubscriptionBox" onclick="toggleFood('Fruit');"></label>
 			<label for="foodSubscriptionBoxSnacks">Snacks Only <input type="radio" id="foodSubscriptionBoxSnacks" name="foodSubscriptionBox" onclick="toggleFood('Snacks');"></label>
@@ -61,6 +70,11 @@
 			<hr>
 			<br>    
 			<div class="center-container">
+				<em>This button sends a message to the server, which replies over a private channel that only your STOMP session can see, creating an RPC-style callback
+					for low-latency round trip server hits that don't require an Ajax call.</em>
+			</div>
+			<br>
+			<div class="center-container">
 				<button onClick="sendPing();">Ping</button>
 			</div>
 			<div class="center-container">
@@ -70,6 +84,11 @@
 		<hr>
 		<div class="center-container">
 			<h2>Family Messenger</h2>
+		</div>
+		<br>
+		<div class="center-container">
+			<em>Utilizing a series of fanout exchanges, we can broadcast messages to different groups of family members.  All members in the group receive the message.
+			The "assign a chore" button uses a distribution group, evenly distributing chores to a single family member at a time.</em>
 		</div>
 		<br>
 		<div class="center-container">
