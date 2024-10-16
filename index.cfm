@@ -43,6 +43,10 @@
 			connected. If you open two tabs, you'll see they are reveiving the same data.  Open your browser's console to see debug info from the Stomp.js library.  As you subscribe and 
 			unsubscribe from different topics, you'll see the incoming messages change based on your subscriptions, which are authorized and tracked on the server.
 		</p>
+		<p>
+			Full source code for this demo available here: <a href="https://github.com/bdw429s/socketbox-stomp-demo">bdw429s/socketbox-stomp-demo</a>.  You can run this 
+			yourself on the latest BoxLang MiniServer or on CommandBox 6.1+ and any CF engine.
+		</p>		
 		<hr>
 
 		<div id="lucky-numbers-wrapper" >
